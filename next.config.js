@@ -3,8 +3,20 @@
  * for Docker builds.
  */
 await import("./src/env.js");
+import path from "path";
+
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+    webpack: (config, { isServer, nextRuntime }) => {
+        if (isServer && nextRuntime === "nodejs") {
+          config.resolve.alias = {
+            ...config.resolve.alias,
+            playht: path.resolve("node_modules/playht/dist/cjs"),
+          };
+        }
+        return config;
+      },
+};
 
 export default config;
