@@ -1,3 +1,10 @@
-* Move query formatting into the client so it is more visible
-* Generate flashcards from text (either direction)
-* Thematic extensions for context based learning
+* There are decks, there are cards.
+* Deck has a level.
+  * beginner, intermediate, advanced
+* For each language combination, there is a deck page.
+* We need creator permissions
+* Figure out decks appearing in both languages.
+
+## slowly figure this out
+
+* User experience for learner
