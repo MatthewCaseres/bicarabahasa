@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
   // Further reading:
   // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
@@ -55,47 +55,36 @@ model Session {
 }
 
 model User {
-  id                 String               @id @default(cuid())
-  name               String?
-  email              String?              @unique
-  emailVerified      DateTime?
-  image              String?
-  accounts           Account[]
-  sessions           Session[]
-  posts              Post[]
-  userLanguagePairings UserLanguagePairing[]
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  posts         Post[]
+  collections   Collection[]
+  decks         Deck[]
+  cards         Card[]
+  userCards     UserCard[]
 }
 
-model LanguagePairing {
-  id              String               @id @default(cuid())
-  nativeLanguage  String
-  foreignLanguage String
-  userLanguagePairings UserLanguagePairing[]
-  collections     Collection[]
-
-  @@unique([nativeLanguage, foreignLanguage])
-}
-
-model UserLanguagePairing {
-  id                String         @id @default(cuid())
-  userId            String
-  languagePairingId String
-  user              User           @relation(fields: [userId], references: [id])
-  languagePairing   LanguagePairing @relation(fields: [languagePairingId], references: [id])
-
-  @@unique([userId, languagePairingId])
-  @@index([userId])
-  @@index([languagePairingId])
+enum Role {
+  USER
+  CREATOR
+  ADMIN
 }
 
 model Collection {
   id                String          @id @default(cuid())
   name              String
-  languagePairingId String
-  languagePairing   LanguagePairing @relation(fields: [languagePairingId], references: [id])
   decks             Deck[]
+  createdBy         User            @relation(fields: [createdById], references: [id])
+  createdById       String
+  updatedAt         DateTime        @updatedAt
 
-  @@index([languagePairingId])
+  @@index([createdById])
 }
 
 model Deck {
@@ -103,18 +92,50 @@ model Deck {
   name         String
   collectionId String
   collection   Collection @relation(fields: [collectionId], references: [id])
-  cards        Card[] // New relationship
+  cards        Card[]
+  createdBy    User       @relation(fields: [createdById], references: [id])
+  createdById  String
+  updatedAt    DateTime   @updatedAt
 
   @@index([collectionId])
+  @@index([createdById])
 }
 
 // New model
 model Card {
-  id          String @id @default(cuid())
-  nativeText  String
-  foreignText String
+  id          String     @id @default(cuid())
+  indonesian  String
+  english     String
+  indonesianAudioUrl String
+  englishAudioUrl String
   deckId      String
-  deck        Deck   @relation(fields: [deckId], references: [id])
+  deck        Deck       @relation(fields: [deckId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  createdBy   User       @relation(fields: [createdById], references: [id])
+  createdById String
+  userCards   UserCard[]
 
   @@index([deckId])
+  @@index([createdById])
+}
+
+model UserCard {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  cardId      String
+  card        Card     @relation(fields: [cardId], references: [id])
+  
+  // Spaced repetition fields
+  interval    Int      @default(1)      // Current interval in days
+  repetitions Int      @default(0)      // Number of successful reviews
+  easeFactor  Float    @default(2.5)    // Ease factor, starting at 2.5
+  nextReview  DateTime @default(now())   // When the card should be reviewed next
+  isAgain     Boolean  @default(false)   // Whether the card should be reviewed again
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, cardId])
+  @@index([userId])
+  @@index([cardId])
 }

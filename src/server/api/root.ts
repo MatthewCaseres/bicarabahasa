@@ -1,7 +1,9 @@
 import { postRouter } from "~/server/api/routers/post";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { openaiRouter } from "~/server/api/routers/openai";
-
+import { collectionRouter } from "~/server/api/routers/collection";
+import { deckRouter } from "~/server/api/routers/deck";
+import { cardRouter } from "~/server/api/routers/card";
 /**
  * This is the primary router for your server.
  *
@@ -10,6 +12,9 @@ import { openaiRouter } from "~/server/api/routers/openai";
 export const appRouter = createTRPCRouter({
   post: postRouter,
   openai: openaiRouter,
+  collection: collectionRouter,
+  deck: deckRouter,
+  card: cardRouter,
 });
 
 // export type definition of API

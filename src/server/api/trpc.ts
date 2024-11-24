@@ -131,3 +131,11 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+// Now one only ADMIN can create collections
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.session?.user?.role !== "ADMIN") {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
+});
