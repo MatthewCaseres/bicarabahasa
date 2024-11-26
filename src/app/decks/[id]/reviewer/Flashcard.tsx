@@ -5,12 +5,10 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 import { FlashcardProvider, useFlashcard } from "./FlashcardContext";
 import {
-  CheckCircleIcon,
-  XCircleIcon,
-  EyeIcon,
   EyeSlashIcon,
   MicrophoneIcon,
   MicrophoneCrossIcon,
+  NextCardIcon,
 } from "~/components/icons";
 import "regenerator-runtime/runtime";
 import React from "react";
@@ -39,12 +37,16 @@ export function useCardActions() {
   const [correctCount, setCorrectCount] = React.useState<number>(0);
   const [incorrectCount, setIncorrectCount] = React.useState<number>(0);
 
-  const handleCorrectNoFail = (isQueueCard: boolean) => {
+  const passCard = (isQueueCard: boolean) => {
     if (isQueueCard) {
       dispatch({ type: "PASS_PASSED_QUEUE_CARD" });
     } else {
       dispatch({ type: "PASS_PASSED_CARD" });
     }
+  };
+
+  const handleCorrectNoFail = (isQueueCard: boolean) => {
+    passCard(isQueueCard);
     setCorrectCount((prev) => prev + 1);
   };
 
@@ -65,6 +67,7 @@ export function useCardActions() {
     handleCorrectNoFail,
     handleIncorrectAnswer,
     handleCorrectWithFail,
+    handleSkippedCard: passCard,
     correctCount,
     incorrectCount,
   };
@@ -84,6 +87,7 @@ function FlashCardContent() {
     handleCorrectNoFail,
     handleIncorrectAnswer,
     handleCorrectWithFail,
+    handleSkippedCard,
     correctCount,
     incorrectCount,
   } = useCardActions();
@@ -94,6 +98,7 @@ function FlashCardContent() {
   React.useEffect(() => {
     if (currentCard) {
       startCard(currentCard.englishAudioUrl);
+      setShowIndonesian(false);
     }
   }, [currentCard, correctCount]);
 
@@ -177,29 +182,28 @@ function FlashCardContent() {
             <span 
               onClick = {(e) => {
                 e.stopPropagation();
-                playIndonesian();
+                if (showIndonesian) {
+                  playIndonesian();
+                }
+                setShowIndonesian(true);
               }}
-              className={`text-xl hover:text-blue-600 ${showIndonesian ? "" : "blur"}`}
+              className={`text-xl ${showIndonesian ? "hover:text-blue-600" : "blur"}`}
             >
               {currentCard.indonesian}
-            </span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowIndonesian(!showIndonesian);
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+                setShowIndonesian(false);
               }}
               className="rounded-full p-1 transition-colors hover:bg-gray-100"
               aria-label="Hide Indonesian text"
             >
-              {showIndonesian ? (
-                <EyeSlashIcon size={20} />
-              ) : (
-                <EyeIcon size={20} />
-              )}
-            </button>
-          </>
+            {showIndonesian && <EyeSlashIcon size={20} />}
+          </button>
+        </>
       </div>
-      <div className="flex select-none items-center gap-2">
+      <div className="flex select-none items-center gap-2 justify-between">
         {listening ? (
           <div
             className="p-1"
@@ -215,6 +219,12 @@ function FlashCardContent() {
         {lastTranscript && (
           <div className="bg-gray-100 rounded-md p-2">{lastTranscript}</div>
         )}
+        <div
+          onClick={() => handleSkippedCard(isQueueCard)}
+          className="rounded-full p-1 transition-colors hover:bg-green-100"
+        >
+          <NextCardIcon size={24} />
+        </div>
       </div>
     </div>
   );

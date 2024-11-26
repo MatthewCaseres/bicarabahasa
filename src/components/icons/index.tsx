@@ -5,6 +5,7 @@ import { CheckCircleIcon } from './check-circle';
 import { XCircleIcon } from './x-circle';
 import { MicrophoneIcon } from './microphone';
 import { MicrophoneCrossIcon } from './microphone-cross';
+import { NextCardIcon } from './next-card';
 
 export {
   EyeIcon,
@@ -14,4 +15,5 @@ export {
   XCircleIcon,
   MicrophoneIcon,
   MicrophoneCrossIcon,
+  NextCardIcon,
 }
