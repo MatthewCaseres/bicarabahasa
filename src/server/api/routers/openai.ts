@@ -12,7 +12,7 @@ export const openaiRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const completion = await openai.chat.completions.create({
         messages: [{ role: "user", content: input.prompt }],
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         temperature: 0.7,
         response_format: { type: "json_object" },
       });

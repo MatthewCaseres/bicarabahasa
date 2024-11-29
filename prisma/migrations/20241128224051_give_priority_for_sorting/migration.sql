@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Collection" ADD COLUMN     "priority" INTEGER NOT NULL DEFAULT 10000;
+
+-- AlterTable
+ALTER TABLE "Deck" ADD COLUMN     "priority" INTEGER NOT NULL DEFAULT 10000;

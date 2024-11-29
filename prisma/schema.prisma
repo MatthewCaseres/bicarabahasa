@@ -79,6 +79,9 @@ enum Role {
 model Collection {
   id                String          @id @default(cuid())
   name              String
+  description       String?
+  isPublic          Boolean         @default(false)
+  priority          Int             @default(10000)
   decks             Deck[]
   createdBy         User            @relation(fields: [createdById], references: [id])
   createdById       String
@@ -90,6 +93,9 @@ model Collection {
 model Deck {
   id           String     @id @default(cuid())
   name         String
+  description  String?
+  isPublic     Boolean    @default(false)
+  priority     Int        @default(10000)
   collectionId String
   collection   Collection @relation(fields: [collectionId], references: [id])
   cards        Card[]
@@ -107,7 +113,9 @@ model Card {
   indonesian  String
   english     String
   indonesianAudioUrl String
+  indonesianHelpText String?
   englishAudioUrl String
+  englishHelpText String?
   deckId      String
   deck        Deck       @relation(fields: [deckId], references: [id])
   createdAt   DateTime   @default(now())

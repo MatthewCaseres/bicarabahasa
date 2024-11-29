@@ -13,7 +13,10 @@ import {
 import "regenerator-runtime/runtime";
 import React from "react";
 
+import { CompletionScreen } from "./CompletionScreen";
+
 async function startCard(audioUrl: string) {
+  console.log("starting card", audioUrl);
   const audio = new Audio(audioUrl);
   try {
     await new Promise((resolve, reject) => {
@@ -35,9 +38,10 @@ async function startCard(audioUrl: string) {
 export function useCardActions() {
   const { dispatch } = useFlashcard();
   const [correctCount, setCorrectCount] = React.useState<number>(0);
+  const [passedCount, setPassedCount] = React.useState<number>(0);
   const [incorrectCount, setIncorrectCount] = React.useState<number>(0);
 
-  const passCard = (isQueueCard: boolean) => {
+  const removeCard = (isQueueCard: boolean) => {
     if (isQueueCard) {
       dispatch({ type: "PASS_PASSED_QUEUE_CARD" });
     } else {
@@ -45,8 +49,13 @@ export function useCardActions() {
     }
   };
 
+  const handlePassCard = (isQueueCard: boolean) => {
+    setPassedCount((prev) => prev + 1);
+    removeCard(isQueueCard);
+  };
+
   const handleCorrectNoFail = (isQueueCard: boolean) => {
-    passCard(isQueueCard);
+    removeCard(isQueueCard);
     setCorrectCount((prev) => prev + 1);
   };
 
@@ -67,9 +76,10 @@ export function useCardActions() {
     handleCorrectNoFail,
     handleIncorrectAnswer,
     handleCorrectWithFail,
-    handleSkippedCard: passCard,
+    handlePassCard,
     correctCount,
     incorrectCount,
+    passedCount,
   };
 }
 
@@ -87,9 +97,10 @@ function FlashCardContent() {
     handleCorrectNoFail,
     handleIncorrectAnswer,
     handleCorrectWithFail,
-    handleSkippedCard,
+    handlePassCard,
     correctCount,
     incorrectCount,
+    passedCount,
   } = useCardActions();
   const [showIndonesian, setShowIndonesian] = React.useState(false);
   const [lastTranscript, setLastTranscript] = React.useState("");
@@ -144,10 +155,9 @@ function FlashCardContent() {
       startCard(currentCard.indonesianAudioUrl);
     }
   }, [transcript, currentCard, dispatch, resetTranscript, listening]);
-
   if (!currentCard)
     return (
-      <div>YAY</div>
+      <CompletionScreen correctCount={correctCount} incorrectCount={incorrectCount} passedCount={passedCount} />
     );
 
   const playIndonesian = () => {
@@ -220,7 +230,7 @@ function FlashCardContent() {
           <div className="bg-gray-100 rounded-md p-2">{lastTranscript}</div>
         )}
         <div
-          onClick={() => handleSkippedCard(isQueueCard)}
+          onClick={() => handlePassCard(isQueueCard)}
           className="rounded-full p-1 transition-colors hover:bg-green-100"
         >
           <NextCardIcon size={24} />

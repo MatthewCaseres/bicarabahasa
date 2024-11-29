@@ -3,18 +3,33 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const collectionRouter = createTRPCRouter({
   create: protectedProcedure
-    .input(z.object({ name: z.string().min(1) }))
+    .input(
+      z.object({
+        name: z.string().min(1),
+        description: z.string().nullable(),
+        isPublic: z.boolean(),
+        priority: z.number().int(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.collection.create({
         data: {
           name: input.name,
+          description: input.description,
+          isPublic: input.isPublic,
+          priority: input.priority,
           createdBy: { connect: { id: ctx.session.user.id } },
         },
       });
     }),
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.collection.findMany();
+    return ctx.db.collection.findMany({
+      orderBy: [
+        { isPublic: 'desc' },
+        { priority: 'asc' }
+      ],
+    });
   }),
 
   getById: protectedProcedure
@@ -27,11 +42,24 @@ export const collectionRouter = createTRPCRouter({
     }),
 
   update: protectedProcedure
-    .input(z.object({ id: z.string(), name: z.string().min(1) }))
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1),
+        description: z.string().nullable(),
+        isPublic: z.boolean(),
+        priority: z.number().int(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.collection.update({
         where: { id: input.id },
-        data: { name: input.name },
+        data: {
+          name: input.name,
+          description: input.description,
+          isPublic: input.isPublic,
+          priority: input.priority,
+        },
       });
     }),
 

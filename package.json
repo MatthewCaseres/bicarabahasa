@@ -17,6 +17,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^1.6.0",
     "@google-cloud/storage": "^7.13.0",
+    "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.1.5",
     "@hookform/resolvers": "^3.9.0",
     "@prisma/client": "^5.14.0",
@@ -25,6 +26,7 @@
     "@radix-ui/react-radio-group": "^1.2.1",
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@tanstack/react-query": "^5.50.0",
