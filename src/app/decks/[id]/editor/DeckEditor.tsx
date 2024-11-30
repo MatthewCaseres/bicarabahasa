@@ -16,20 +16,12 @@ import {
 import { Textarea } from "~/components/ui/textarea";
 import { EditableLanguageCardList } from "./EditableCardList";
 import { generatePrompt } from "./promptGeneratorUtils";
-import { TextAreaResize } from "~/components/ui/textarea-resize";
 
 const FormSchema = z.object({
   user_input: z.string(),
 });
 
 export function DeckEditor({ deckId }: { deckId: string }) {
-  const utils = api.useUtils();
-  const createManyCards = api.card.createMany.useMutation({
-    onSuccess: async () => {
-      await utils.card.getByDeckId.invalidate({ deckId });
-    },
-  });
-  // createManyCards.mutate({cards, deckId})
   function onSubmit(formData: z.infer<typeof FormSchema>) {
     const prompt = generatePrompt({
       user_prompt: formData.user_input,
