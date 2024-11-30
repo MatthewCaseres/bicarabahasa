@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { Role } from "@prisma/client";
 
 export const userRouter = createTRPCRouter({
-  makeAdmin: protectedProcedure
+  makeAdmin: adminProcedure
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Check if the current user is an admin

@@ -1,27 +1,27 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { PrismaClient } from "@prisma/client";
+
+async function rebalancePriorities(db: PrismaClient) {
+  const collections = await db.collection.findMany({
+    orderBy: [
+      { isPublic: 'desc' },
+      { priority: 'asc' }
+    ],
+  });
+
+  const updates = collections.map((collection, index) => {
+    console.log("FUCK",collection.name, index)
+    return db.collection.update({
+      where: { id: collection.id },
+      data: { priority: (index + 1) * 10 },
+    });
+  });
+
+  await db.$transaction(updates);
+}
 
 export const collectionRouter = createTRPCRouter({
-  create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        description: z.string().nullable(),
-        isPublic: z.boolean(),
-        priority: z.number().int(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.collection.create({
-        data: {
-          name: input.name,
-          description: input.description,
-          isPublic: input.isPublic,
-          priority: input.priority,
-          createdBy: { connect: { id: ctx.session.user.id } },
-        },
-      });
-    }),
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db.collection.findMany({
@@ -37,11 +37,35 @@ export const collectionRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.collection.findUnique({
         where: { id: input.id },
-        include: { decks: true },
+        include: { decks: { orderBy: [{ isPublic: "desc" }, { priority: "asc" }] } },
       });
     }),
 
-  update: protectedProcedure
+  create: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        description: z.string().nullable(),
+        isPublic: z.boolean(),
+        priority: z.number().int(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const collection = await ctx.db.collection.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          isPublic: input.isPublic,
+          priority: input.priority,
+          createdBy: { connect: { id: ctx.session.user.id } },
+        },
+      });
+
+      await rebalancePriorities(ctx.db);
+      return collection;
+    }),
+
+  update: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -52,7 +76,7 @@ export const collectionRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.collection.update({
+      const collection = await ctx.db.collection.update({
         where: { id: input.id },
         data: {
           name: input.name,
@@ -61,9 +85,12 @@ export const collectionRouter = createTRPCRouter({
           priority: input.priority,
         },
       });
+
+      await rebalancePriorities(ctx.db);
+      return collection;
     }),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.collection.delete({

@@ -10,31 +10,31 @@ import { PencilIcon } from "~/components/icons/pencil";
 import { ChevronRightIcon } from "~/components/icons/chevron-right";
 import { EyeIcon } from "~/components/icons/eye";
 import { EyeSlashIcon } from "~/components/icons/eye-slash";
+import { ADMIN } from "~/lib/utils";
 
 export function CollectionCreator() {
   const [collections] = api.collection.getAll.useSuspenseQuery();
   const utils = api.useUtils();
-  const ADMIN = false;
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editCollectionId, setEditCollectionId] = useState<string | null>(null);
   const createCollection = api.collection.create.useMutation({
     onSuccess: async () => {
-      await utils.collection.invalidate();
+      await utils.collection.getAll.invalidate();
     },
   });
   const updateCollection = api.collection.update.useMutation({
     onSuccess: async () => {
-      await utils.collection.invalidate();
+      await utils.collection.getAll.invalidate();
     },
   });
-  const collection = editCollectionId
+  const currentCollection = editCollectionId
     ? collections.find((collection) => collection.id === editCollectionId)
     : null;
-  const name = collection?.name ?? "";
-  const description = collection?.description ?? "";
-  const isPublic = collection?.isPublic ?? false;
-  const priority = collection?.priority ?? 10000;
+  const name = currentCollection?.name ?? "";
+  const description = currentCollection?.description ?? "";
+  const isPublic = currentCollection?.isPublic ?? false;
+  const priority = currentCollection?.priority ?? 10000;
 
   return (
     <div className="mx-auto max-w-2xl lg:max-w-5xl p-6">

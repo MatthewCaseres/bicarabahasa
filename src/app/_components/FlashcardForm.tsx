@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "node_modules/@headlessui/react/dist/components/input/input";
+import { Switch } from "~/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -14,59 +14,52 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Textarea } from "~/components/ui/textarea";
+import { Input } from "~/components/ui/input";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string(),
-  url: z.string()
+  indonesian: z.string().min(1, "Indonesian is required"),
+  english: z.string().min(1, "English is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface NameDescriptionFormProps {
+interface FlashcardFormProps {
   onSubmit: (values: FormValues) => void;
   onCancel: () => void;
-  entityTitle: string;
-  entityAction: "Create" | "Edit";
-  name: string;
-  description: string;
-  url: string;
+  indonesian: string;
+  english: string;
 }
 
-export function NameDescriptionForm({
+export function FlashcardForm({
   onSubmit,
   onCancel,
-  entityTitle,
-  entityAction,
-  name,
-  description,
-  url,
-}: NameDescriptionFormProps) {
+  indonesian,
+  english,
+}: FlashcardFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name,
-      description,
-      url,
+      indonesian,
+      english,
     },
   });
 
   return (
     <div className="space-y-6 p-6">
       <h2 className="text-lg font-semibold">
-        {entityAction} {entityTitle}
+        Edit Flashcard
       </h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="name"
+            name="indonesian"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={`${entityTitle} name`}
+                    placeholder="Indonesian"
                     className="resize-none"
                     {...field}
                   />
@@ -78,13 +71,13 @@ export function NameDescriptionForm({
 
           <FormField
             control={form.control}
-            name="description"
+            name="english"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Description (Optional)</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Add a description..."
+                    placeholder="English"
                     className="resize-none"
                     {...field}
                   />
@@ -93,21 +86,6 @@ export function NameDescriptionForm({
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Image URL (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Add an image URL..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <div className="flex justify-end gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel

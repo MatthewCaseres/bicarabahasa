@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -7,7 +7,7 @@ const openai = new OpenAI({
 });
 
 export const openaiRouter = createTRPCRouter({
-  getStructuredData: protectedProcedure
+  getStructuredData: adminProcedure
     .input(z.object({ prompt: z.string() }))
     .query(async ({ input }) => {
       const completion = await openai.chat.completions.create({

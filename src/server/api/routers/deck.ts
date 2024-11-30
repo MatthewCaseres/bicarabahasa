@@ -1,19 +1,27 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { PrismaClient } from "@prisma/client";
+
+async function rebalancePriorities(db: PrismaClient, collectionId: string) {
+  const decks = await db.deck.findMany({
+    where: { collectionId },
+    orderBy: [
+      { isPublic: 'desc' },
+      { priority: 'asc' }
+    ],
+  });
+
+  const updates = decks.map((deck, index) => 
+    db.deck.update({
+      where: { id: deck.id },
+      data: { priority: (index + 1) * 10 }
+    })
+  );
+
+  await db.$transaction(updates);
+}
 
 export const deckRouter = createTRPCRouter({
-  create: protectedProcedure
-    .input(z.object({ name: z.string().min(1), collectionId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.deck.create({
-        data: {
-          name: input.name,
-          collection: { connect: { id: input.collectionId } },
-          createdBy: { connect: { id: ctx.session.user.id } },
-        },
-      });
-    }),
-
   getAll: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db.deck.findMany({
       include: { cards: true },
@@ -32,19 +40,64 @@ export const deckRouter = createTRPCRouter({
   getByCollectionId: protectedProcedure
     .input(z.object({ collectionId: z.string() }))
     .query(async ({ ctx, input }) => {
-      return ctx.db.deck.findMany({ where: { collectionId: input.collectionId } });
-    }),
-
-  update: protectedProcedure
-    .input(z.object({ id: z.string(), name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.deck.update({
-        where: { id: input.id },
-        data: { name: input.name },
+      return ctx.db.deck.findMany({
+        where: { collectionId: input.collectionId },
       });
     }),
 
-  delete: protectedProcedure
+  create: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        description: z.string().nullable(),
+        isPublic: z.boolean(),
+        priority: z.number().int(),
+        collectionId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const deck = await ctx.db.deck.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          isPublic: input.isPublic,
+          priority: input.priority,
+          collection: { connect: { id: input.collectionId } },
+          createdBy: { connect: { id: ctx.session.user.id } },
+        },
+      });
+
+      await rebalancePriorities(ctx.db, input.collectionId);
+      return deck;
+    }),
+
+
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1),
+        isPublic: z.boolean(),
+        description: z.string().nullable(),
+        priority: z.number().int(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const deck = await ctx.db.deck.update({
+        where: { id: input.id },
+        data: {
+          name: input.name,
+          description: input.description,
+          isPublic: input.isPublic,
+          priority: input.priority,
+        },
+      });
+
+      await rebalancePriorities(ctx.db, deck.collectionId);
+      return deck;
+    }),
+
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.deck.delete({

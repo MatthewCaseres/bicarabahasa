@@ -51,7 +51,6 @@ export function DeckEditor({ deckId }: { deckId: string }) {
 
   return (
     <>
-      <TextAreaResize />
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

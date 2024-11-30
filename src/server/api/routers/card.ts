@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { Storage } from '@google-cloud/storage';
 import { env } from "~/env";
 
@@ -63,23 +63,29 @@ export const cardRouter = createTRPCRouter({
       });
     }),
 
-  update: protectedProcedure
+  update: adminProcedure
     .input(z.object({ 
       id: z.string(),
       english: z.string().min(1),
       indonesian: z.string().min(1),
     }))
     .mutation(async ({ ctx, input }) => {
+      const [englishAudioUrl, indonesianAudioUrl] = await Promise.all([
+        generateAudio(input.english, 'matt'),
+        generateAudio(input.indonesian, 'abyasa')
+      ]);
       return ctx.db.card.update({
         where: { id: input.id },
         data: { 
           english: input.english,
           indonesian: input.indonesian,
+          englishAudioUrl,
+          indonesianAudioUrl,
         },
       });
     }),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.card.delete({
@@ -87,7 +93,7 @@ export const cardRouter = createTRPCRouter({
       });
     }),
 
-  createMany: protectedProcedure
+  createMany: adminProcedure
     .input(z.object({
       cards: z.array(z.object({
         english: z.string().min(1),
