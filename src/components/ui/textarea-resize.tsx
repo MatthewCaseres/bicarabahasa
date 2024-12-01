@@ -22,7 +22,7 @@ export function TextAreaResize({ ...props }: TextAreaProps) {
       <textarea
         className="w-full text-slate-600 bg-slate-50 border border-transparent hover:border-slate-200 appearance-none rounded px-3.5 pt-1 pb-0 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
         onInput={(e) => {
-          e.currentTarget.parentNode!.dataset.clonedVal = e.currentTarget.value;
+          (e.currentTarget.parentNode as HTMLElement).dataset.clonedVal = e.currentTarget.value;
         }}
         {...props}
       />

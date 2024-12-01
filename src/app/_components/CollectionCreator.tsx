@@ -7,7 +7,6 @@ import { NameDescriptionForm } from "./NameDescriptionForm";
 import { Dialog } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { PencilIcon } from "~/components/icons/pencil";
-import { ChevronRightIcon } from "~/components/icons/chevron-right";
 import { EyeIcon } from "~/components/icons/eye";
 import { EyeSlashIcon } from "~/components/icons/eye-slash";
 import { ADMIN } from "~/lib/utils";
@@ -92,7 +91,7 @@ export function CollectionCreator() {
                   <button
                     title="Edit"
                   className="text-gray-500 hover:text-blue-600"
-                  onClick={(e) => {
+                  onClick={() => {
                     setEditOpen(true);
                     setEditCollectionId(collection.id);
                 }}

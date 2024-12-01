@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 
 async function rebalancePriorities(db: PrismaClient) {
   const collections = await db.collection.findMany({
@@ -11,7 +11,6 @@ async function rebalancePriorities(db: PrismaClient) {
   });
 
   const updates = collections.map((collection, index) => {
-    console.log("FUCK",collection.name, index)
     return db.collection.update({
       where: { id: collection.id },
       data: { priority: (index + 1) * 10 },

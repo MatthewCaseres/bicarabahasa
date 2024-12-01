@@ -8,7 +8,7 @@ import React, { useState } from 'react'
 import { Button } from "~/components/ui/button";
 import { ADMIN } from "~/lib/utils";
 import { FlashcardForm } from "~/app/_components/FlashcardForm";
-import { Card } from "@prisma/client";
+import type { Card } from "@prisma/client";
 import { Dialog } from "~/components/ui/dialog";
 
 type LanguageCardProps = Card & {
@@ -92,7 +92,7 @@ export function LanguageCardList({ deckId }: { deckId: string }) {
         <FlashcardForm
           onSubmit={(values) => {
             if (editCardId) {
-              updateCard.mutate({...values, id: editCardId!});
+              updateCard.mutate({...values, id: editCardId});
             } else {
               console.error("No card id");
             }

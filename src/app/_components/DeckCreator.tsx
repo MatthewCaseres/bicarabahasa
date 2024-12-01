@@ -9,22 +9,25 @@ import { Button } from "~/components/ui/button";
 import { PencilIcon } from "~/components/icons/pencil";
 import { EyeIcon } from "~/components/icons/eye";
 import { EyeSlashIcon } from "~/components/icons/eye-slash";
-import { Collection } from "@prisma/client";
+import type { Collection } from "@prisma/client";
 import { ListBulletIcon } from "~/components/icons/list-bullet";
 import { ADMIN } from "~/lib/utils";
 
 export function DeckCreator({ collectionId }: { collectionId: string }) {
-  const [collection] = api.collection.getById.useSuspenseQuery({
-    id: collectionId,
-  });
-  if (!collection) {
-    return <div>Collection not found</div>;
-  }
-  const decks = collection.decks;
-  const utils = api.useUtils();
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDeckId, setEditDeckId] = useState<string | null>(null);
+
+  const [collection] = api.collection.getById.useSuspenseQuery({
+    id: collectionId,
+  });
+
+  if (!collection) {
+    return <div>Collection not found</div>;
+  }
+
+  const decks = collection.decks;
+  const utils = api.useUtils();
   const createDeck = api.deck.create.useMutation({
     onSuccess: async () => {
       await utils.collection.getById.invalidate();

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter } from "~/server/api/trpc";
 import OpenAI from "openai";
 
 const openai = new OpenAI({

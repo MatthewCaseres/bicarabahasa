@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 
 async function rebalancePriorities(db: PrismaClient, collectionId: string) {
   const decks = await db.deck.findMany({

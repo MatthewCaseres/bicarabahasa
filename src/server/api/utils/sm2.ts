@@ -1,4 +1,4 @@
-import type { PrismaClient, UserCard } from '@prisma/client';
+import type { UserCard } from '@prisma/client';
 
 export function reviewCardCalculations(userCard: UserCard, quality: number) {
   const newEaseFactor = calculateEaseFactor(userCard, quality);

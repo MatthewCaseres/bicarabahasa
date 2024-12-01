@@ -11,7 +11,6 @@ const config = {
     "next/core-web-vitals",
     "plugin:@typescript-eslint/recommended-type-checked",
     "plugin:@typescript-eslint/stylistic-type-checked",
-    "plugin:storybook/recommended"
   ],
   "rules": {
     "@typescript-eslint/no-unsafe-return": "off",

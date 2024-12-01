@@ -68,7 +68,7 @@ export function useCardActions() {
     setCorrectCount((prev) => prev + 1);
   };
 
-  const handleIncorrectAnswer = (isQueueCard: boolean) => {
+  const handleIncorrectAnswer = () => {
     setIncorrectCount((prev) => prev + 1);
   };
 
@@ -87,7 +87,6 @@ function FlashCardContent() {
   const { transcript, resetTranscript, listening } = useSpeechRecognition();
   const { state, dispatch } = useFlashcard();
   const [hasFailed, setHasFailed] = React.useState(false);
-  const isFinished = state.cards.length === 0 && state.cardQueue.length === 0;
   const maxQueueLength = 2;
   const isQueueCard =
     (state.cards.length === 0 && state.cardQueue.length > 0) ||
@@ -108,15 +107,15 @@ function FlashCardContent() {
   // Play the audio of the current card any time the state changes, then begin listening
   React.useEffect(() => {
     if (currentCard) {
-      startCard(currentCard.englishAudioUrl);
       setShowIndonesian(false);
+      void startCard(currentCard.englishAudioUrl);
     }
   }, [currentCard, correctCount]);
 
   // on unmount, stop listening
   React.useEffect(() => {
     return () => {
-      SpeechRecognition.abortListening();
+      void SpeechRecognition.abortListening();
       console.log("aborted");
     };
   }, []);
@@ -150,9 +149,9 @@ function FlashCardContent() {
       resetTranscript();
       setLastTranscript("");
     } else {
-      handleIncorrectAnswer(isQueueCard);
+      handleIncorrectAnswer();
       setHasFailed(true);
-      startCard(currentCard.indonesianAudioUrl);
+      void startCard(currentCard.indonesianAudioUrl);
     }
   }, [transcript, currentCard, dispatch, resetTranscript, listening]);
   if (!currentCard)
