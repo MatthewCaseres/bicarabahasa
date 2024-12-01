@@ -6,7 +6,11 @@ import { roles } from "~/lib/utils";
 
 export default async function Home() {
   const session = await getServerAuthSession();
-  void api.collection.getAll.prefetch();
+  const isAdmin = session?.user?.role === roles.ADMIN;
+  
+  if (session) {
+    void api.collection.getAll.prefetch();
+  }
 
   return (
     <HydrateClient>
@@ -46,7 +50,7 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-        {session?.user?.role === roles.ADMIN && <CollectionCreator />}
+        {session && <CollectionCreator isAdmin={isAdmin}/>}
       </main>
     </HydrateClient>
   );

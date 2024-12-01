@@ -6,7 +6,6 @@ import { TrashIcon } from "~/components/icons/trash";
 import { PencilIcon } from "~/components/icons/pencil";
 import React, { useState } from 'react'
 import { Button } from "~/components/ui/button";
-import { ADMIN } from "~/lib/utils";
 import { FlashcardForm } from "~/app/_components/FlashcardForm";
 import type { Card } from "@prisma/client";
 import { Dialog } from "~/components/ui/dialog";
@@ -15,9 +14,10 @@ type LanguageCardProps = Card & {
   setEditCardId: (id: string) => void;
   setEditOpen: (open: boolean) => void;
   onDelete: () => void;
+  isAdmin: boolean;
 }
 
-function LanguageCard({ id, indonesian, english, englishAudioUrl, indonesianAudioUrl, setEditCardId, setEditOpen, onDelete }: LanguageCardProps) {
+function LanguageCard({ id, indonesian, english, englishAudioUrl, indonesianAudioUrl, setEditCardId, setEditOpen, onDelete, isAdmin }: LanguageCardProps) {
   const playIndonesian = () => {
     const audio = new Audio(indonesianAudioUrl);
     audio.playbackRate = 0.9;
@@ -52,7 +52,7 @@ function LanguageCard({ id, indonesian, english, englishAudioUrl, indonesianAudi
           {english}
         </p>
       </div>
-      {ADMIN && (
+      {isAdmin && (
         <div className="flex flex-col justify-center items-center gap-2">
           <Button variant="destructive" size="icon" onClick={onDelete}>
             <TrashIcon size={10} />
@@ -66,7 +66,7 @@ function LanguageCard({ id, indonesian, english, englishAudioUrl, indonesianAudi
   )
 }
 
-export function LanguageCardList({ deckId }: { deckId: string }) {
+export function LanguageCardList({ deckId, isAdmin }: { deckId: string, isAdmin: boolean }) {
   const utils = api.useUtils();
   const [cards] = api.card.getByDeckId.useSuspenseQuery({deckId})
   const [editCardId, setEditCardId] = useState<string | null>(null);
@@ -111,6 +111,7 @@ export function LanguageCardList({ deckId }: { deckId: string }) {
           setEditCardId={setEditCardId}
           setEditOpen={setEditOpen}
           onDelete={() => deleteCard.mutate({id: card.id})}
+          isAdmin={isAdmin}
         />
       ))}
     </div>

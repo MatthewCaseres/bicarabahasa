@@ -11,9 +11,14 @@ import { EyeIcon } from "~/components/icons/eye";
 import { EyeSlashIcon } from "~/components/icons/eye-slash";
 import type { Collection } from "@prisma/client";
 import { ListBulletIcon } from "~/components/icons/list-bullet";
-import { ADMIN } from "~/lib/utils";
 
-export function DeckCreator({ collectionId }: { collectionId: string }) {
+export function DeckCreator({ 
+  collectionId, 
+  isAdmin 
+}: { 
+  collectionId: string;
+  isAdmin: boolean;
+}) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDeckId, setEditDeckId] = useState<string | null>(null);
@@ -86,7 +91,7 @@ export function DeckCreator({ collectionId }: { collectionId: string }) {
         </Dialog>
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {decks
-            .filter((deck) => deck.isPublic || ADMIN)
+            .filter((deck) => deck.isPublic || isAdmin)
             .map((deck) => (
               <div key={deck.id} className="relative flex flex-col rounded-lg border border-gray-200 bg-white shadow-md transition-shadow duration-200 hover:border-blue-400 hover:shadow-lg">
                 <Link href={`/decks/${deck.id}/reviewer`} className="p-4 flex-1 pb-9">
@@ -97,7 +102,7 @@ export function DeckCreator({ collectionId }: { collectionId: string }) {
                     {deck.description}
                   </p>
                 </Link>
-                {ADMIN && (
+                {isAdmin && (
                   <div className="absolute bottom-2 left-4 flex gap-2">
                     <button
                       type="button"
@@ -128,7 +133,7 @@ export function DeckCreator({ collectionId }: { collectionId: string }) {
               </div>
             ))}
         </div>
-        {ADMIN && (
+        {isAdmin && (
           <Button onClick={() => setCreateOpen(true)}>Create Deck</Button>
         )}
       </div>

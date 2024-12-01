@@ -9,9 +9,12 @@ import { Button } from "~/components/ui/button";
 import { PencilIcon } from "~/components/icons/pencil";
 import { EyeIcon } from "~/components/icons/eye";
 import { EyeSlashIcon } from "~/components/icons/eye-slash";
-import { ADMIN } from "~/lib/utils";
 
-export function CollectionCreator() {
+interface CollectionCreatorProps {
+  isAdmin: boolean;
+}
+
+export function CollectionCreator({ isAdmin }: CollectionCreatorProps) {
   const [collections] = api.collection.getAll.useSuspenseQuery();
   const utils = api.useUtils();
   const [createOpen, setCreateOpen] = useState(false);
@@ -73,7 +76,7 @@ export function CollectionCreator() {
       </Dialog>
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {collections
-          .filter((collection) => collection.isPublic || ADMIN)
+          .filter((collection) => collection.isPublic || isAdmin)
           .map((collection) => (
             <Link key={collection.id} href={`/collections/${collection.id}`}>
               <div className="flex flex-col gap-2 rounded-lg p-4 border border-gray-200 bg-white shadow-md transition-shadow duration-200 hover:border-blue-400 hover:shadow-lg">
@@ -81,7 +84,7 @@ export function CollectionCreator() {
                 {collection.name}
               </h2>
               <p className="text-sm text-gray-500 min-h-10">{collection.description}</p>
-              {ADMIN && (
+              {isAdmin && (
                 <div className="flex justify-start"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -109,7 +112,7 @@ export function CollectionCreator() {
           </Link>
         ))}
       </div>
-      {ADMIN && (
+      {isAdmin && (
         <Button onClick={() => setCreateOpen(true)}>Create Collection</Button>
       )}
     </div>
