@@ -2,6 +2,7 @@ import { CollectionCreator } from "~/app/_components/CollectionCreator";
 import { getServerAuthSession } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 import Link from "next/link";
+import { roles } from "~/lib/utils";
 
 export default async function Home() {
   const session = await getServerAuthSession();
@@ -45,7 +46,7 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-        {session?.user && <CollectionCreator />}
+        {session?.user?.role === roles.ADMIN && <CollectionCreator />}
       </main>
     </HydrateClient>
   );
