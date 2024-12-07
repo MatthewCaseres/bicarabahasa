@@ -1,6 +1,19 @@
 import { z } from "zod";
 import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Prisma } from "@prisma/client";
+
+// Define the type based on the Prisma include
+export type DeckWithCards = Prisma.DeckGetPayload<{
+  include: { 
+    cards: {
+      include: {
+        userCards: true
+      }
+    }
+  }
+}>;
+
+export type DeckCards = DeckWithCards["cards"];
 
 async function rebalancePriorities(db: PrismaClient, collectionId: string) {
   const decks = await db.deck.findMany({
@@ -30,19 +43,21 @@ export const deckRouter = createTRPCRouter({
 
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db.deck.findUnique({
+    .query(async ({ ctx, input }): Promise<DeckWithCards> => {
+      const deck = await ctx.db.deck.findUnique({
         where: { id: input.id },
-        include: { cards: true },
+        include: { 
+          cards: {
+            orderBy: { createdAt: 'desc' },
+            include: {
+              userCards: true
+            }
+          }
+        },
       });
-    }),
-
-  getByCollectionId: protectedProcedure
-    .input(z.object({ collectionId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db.deck.findMany({
-        where: { collectionId: input.collectionId },
-      });
+      
+      if (!deck) throw new Error("Deck not found");
+      return deck;
     }),
 
   create: adminProcedure

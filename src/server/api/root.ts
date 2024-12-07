@@ -4,6 +4,7 @@ import { openaiRouter } from "~/server/api/routers/openai";
 import { collectionRouter } from "~/server/api/routers/collection";
 import { deckRouter } from "~/server/api/routers/deck";
 import { cardRouter } from "~/server/api/routers/card";
+import { userCardRouter } from "~/server/api/routers/userCard";
 /**
  * This is the primary router for your server.
  *
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   collection: collectionRouter,
   deck: deckRouter,
   card: cardRouter,
+  userCard: userCardRouter,
 });
 
 // export type definition of API

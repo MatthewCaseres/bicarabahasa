@@ -3,7 +3,8 @@ import { api, HydrateClient } from "~/trpc/server";
 
 
 export default async function StudyPage({ params }: { params: { id: string } }) {
-  const cards = await api.card.getByDeckId({ deckId: params.id });
+  const deck = await api.deck.getById({ id: params.id });
+  const cards = deck.cards;
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <HydrateClient>

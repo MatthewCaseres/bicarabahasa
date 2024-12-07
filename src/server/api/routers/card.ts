@@ -50,10 +50,13 @@ async function generateAudio(text: string, voice: string) {
   const audioData = await response.arrayBuffer();
   const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.m4a`;
   const file = bucket.file(filename);
-  
-  await file.save(Buffer.from(audioData), {
-    contentType: 'audio/x-m4a',
-  });
+  try {
+    await file.save(Buffer.from(audioData), {
+      contentType: 'audio/x-m4a',
+    });
+  } catch (error) {
+    console.error('Error saving audio file to gcp:', error);
+  }
 
   return `https://storage.googleapis.com/${env.GOOGLE_CLOUD_BUCKET_NAME}/${filename}`;
 }
@@ -74,15 +77,6 @@ export const cardRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.card.findUnique({
         where: { id: input.id },
-      });
-    }),
-  
-  getByDeckId: protectedProcedure
-    .input(z.object({ deckId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db.card.findMany({
-        where: { deckId: input.deckId },
-        orderBy: { createdAt: 'desc' },
       });
     }),
 

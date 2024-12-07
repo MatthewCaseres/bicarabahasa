@@ -9,8 +9,8 @@ import { Button } from "~/components/ui/button";
 import { PencilIcon } from "~/components/icons/pencil";
 import { EyeIcon } from "~/components/icons/eye";
 import { EyeSlashIcon } from "~/components/icons/eye-slash";
-import type { Collection } from "@prisma/client";
 import { ListBulletIcon } from "~/components/icons/list-bullet";
+import { NameDescriptionHeader } from "./NameDescriptionHeader";
 
 export function DeckCreator({ 
   collectionId, 
@@ -53,7 +53,7 @@ export function DeckCreator({
 
   return (
     <>
-      <CollectionHeader collection={collection} />
+      <NameDescriptionHeader name={collection.name} description={collection.description ?? ""} />
       <div className="mx-auto max-w-2xl p-6 lg:max-w-5xl">
         <Dialog open={createOpen} onClose={() => setCreateOpen(false)}>
           <NameDescriptionForm
@@ -101,6 +101,9 @@ export function DeckCreator({
                   <p className="min-h-10 text-sm text-gray-500">
                     {deck.description}
                   </p>
+                  <div className="text-sm text-gray-500">
+                    {`${deck._count.cards} cards left`}
+                  </div>
                 </Link>
                 {isAdmin && (
                   <div className="absolute bottom-2 left-4 flex gap-2">
@@ -141,17 +144,4 @@ export function DeckCreator({
   );
 }
 
-function CollectionHeader({ collection }: { collection: Collection }) {
-  return (
-    <div className="bg-white py-8 sm:py-12">
-      <div className="mx-auto max-w-7xl px-6 text-center lg:px-8">
-        <h1 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl md:text-5xl">
-          {collection.name}
-        </h1>
-        <p className="mx-auto max-w-xl text-lg leading-8 text-gray-600 sm:text-xl md:max-w-2xl md:text-2xl">
-          {collection.description}
-        </p>
-      </div>
-    </div>
-  );
-}
+

@@ -46,7 +46,7 @@ export function EditableLanguageCardList({ data, deckId }: { data: EditableLangu
   const [cards, setCards] = React.useState(data);
   const createManyCards = api.card.createMany.useMutation({
     onSuccess: async () => {
-      await utils.card.getByDeckId.invalidate({ deckId });
+      await utils.deck.getById.invalidate({ id: deckId });
     },
   });
 

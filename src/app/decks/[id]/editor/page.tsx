@@ -9,7 +9,7 @@ export default async function DeckPage({ params }: { params: { id: string } }) {
   const isAdmin = session?.user?.role === roles.ADMIN;
 
   if (session) {
-    void api.card.getByDeckId({ deckId: params.id });
+    void api.deck.getById({ id: params.id });
   }
 
   return (

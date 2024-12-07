@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Card } from "@prisma/client";
 
 async function rebalancePriorities(db: PrismaClient) {
   const collections = await db.collection.findMany({
@@ -34,10 +34,31 @@ export const collectionRouter = createTRPCRouter({
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return ctx.db.collection.findUnique({
+      const collection = await ctx.db.collection.findUnique({
         where: { id: input.id },
-        include: { decks: { orderBy: [{ isPublic: "desc" }, { priority: "asc" }] } },
+        include: { 
+          decks: { 
+            orderBy: [{ isPublic: "desc" }, { priority: "asc" }],
+            include: {
+              _count: {
+                select: {
+                  cards: {
+                    where: {
+                      userCards: {
+                        none: {
+                          userId: ctx.session.user.id
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } 
+        },
       });
+      console.dir(collection, { depth: null });
+      return collection;
     }),
 
   create: adminProcedure

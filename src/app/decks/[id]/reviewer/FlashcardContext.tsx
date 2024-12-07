@@ -71,3 +71,17 @@ export function useFlashcard() {
   }
   return context;
 } 
+
+export type FlashcardDispatch = React.Dispatch<FlashcardAction>;
+
+// async function updateUser(dispatch, user, updates) {
+// 	dispatch({ type: 'start update', updates })
+// 	try {
+// 		const updatedUser = await userClient.updateUser(user, updates)
+// 		dispatch({ type: 'finish update', updatedUser })
+// 	} catch (error) {
+// 		dispatch({ type: 'fail update', error })
+// 	}
+// }
+
+// export { UserProvider, useUser, updateUser }

@@ -8,7 +8,6 @@ export default async function CollectionPage({ params }: { params: { id: string 
   const isAdmin = session?.user?.role === roles.ADMIN;
   
   if (session) {
-    void api.deck.getByCollectionId.prefetch({ collectionId: params.id });
     void api.collection.getById.prefetch({ id: params.id });
   }
 

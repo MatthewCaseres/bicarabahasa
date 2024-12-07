@@ -44,15 +44,23 @@ export const userCardRouter = createTRPCRouter({
   reviewCard: protectedProcedure
     .input(z.object({ cardId: z.string(), quality: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const userCard = await ctx.db.userCard.findUnique({
-        where: { id: input.cardId },
+      let userCard = await ctx.db.userCard.findFirst({
+        where: { 
+          cardId: input.cardId,
+          userId: ctx.session.user.id
+        },
       });
-      if (!userCard) {
-        throw new Error("User card not found");
+      if (userCard === null) {
+        userCard = await ctx.db.userCard.create({
+          data: {
+            cardId: input.cardId,
+            userId: ctx.session.user.id,
+          },
+        });
       }
       const { newInterval, newRepetitions, newEaseFactor, newNextReview } = reviewCardCalculations(userCard, input.quality);
       return ctx.db.userCard.update({
-        where: { id: input.cardId },
+        where: { id: userCard.id },
         data: {
           interval: newInterval,
           repetitions: newRepetitions,
