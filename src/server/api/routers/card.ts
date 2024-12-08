@@ -126,6 +126,12 @@ export const cardRouter = createTRPCRouter({
   delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      // First delete all associated userCards
+      await ctx.db.userCard.deleteMany({
+        where: { cardId: input.id },
+      });
+
+      // Then delete the card itself
       return ctx.db.card.delete({
         where: { id: input.id },
       });
