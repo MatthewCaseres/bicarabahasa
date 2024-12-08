@@ -1,5 +1,4 @@
 "use client";
-import type { Card } from "@prisma/client";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
@@ -16,7 +15,6 @@ import { api } from "~/trpc/react";
 import type { CardsWithUserCards } from "~/server/api/routers/deck";
 import { Button } from "~/components/ui/button";
 
-
 function FlashCardContent() {
   const utils = api.useUtils();
   const updateUserCard = api.userCard.reviewCard.useMutation({
@@ -27,12 +25,12 @@ function FlashCardContent() {
   const { state, dispatch } = useFlashcard();
   const maxQueueLength = 4;
   const isQueueCard =
-  (state.cards.length === 0 && state.cardQueue.length > 0) ||
-  state.cardQueue.length >= maxQueueLength;
+    (state.cards.length === 0 && state.cardQueue.length > 0) ||
+    state.cardQueue.length >= maxQueueLength;
   const currentCard = isQueueCard ? state.cardQueue[0]! : state.cards[0];
   const slowdownFactor = 0.9;
-  const pauseMultiplier = 1;
-  const finishCard =  (quality?: number) => {
+  const pauseMultiplier = 1.2;
+  const finishCard = (quality?: number) => {
     if (isQueueCard) {
       dispatch({ type: "PASS_PASSED_QUEUE_CARD" });
     } else {
@@ -51,28 +49,42 @@ function FlashCardContent() {
     }
     stopAllAudio();
   };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const commandArray = [
-    {command: "again", callback: () => startCard()},
-    {command: "later", callback: () => enqueueCard()},
-    {command: "easy", callback: () => finishCard(5)},
-    {command: "okay", callback: () => finishCard(3)},
-    {command: "hard", callback: () => finishCard(1)},
-    {command: "skip", callback: () => finishCard()},
-  ]
-  const { transcript, finalTranscript, resetTranscript, listening } = useSpeechRecognition(
-    {commands: commandArray}
-  );
+    { command: "again", callback: () => startCard() },
+    { command: "later", callback: () => enqueueCard() },
+    { command: "easy", callback: () => finishCard(5) },
+    { command: "okay", callback: () => finishCard(3) },
+    { command: "hard", callback: () => finishCard(1) },
+    { command: "skip", callback: () => finishCard() },
+    { command: "pause", callback: () => stopAllAudio() },
+  ];
+  const { transcript, finalTranscript, resetTranscript, listening } =
+    useSpeechRecognition({ commands: commandArray });
   const retryCommandNotFound = async () => {
     if (!popSoundRef.current) return;
     await popSoundRef.current.play();
     await SpeechRecognition.startListening({ language: "en-US" });
-  }
+  };
   // useffect to accomplish the same thing as the commands with a switch
   React.useEffect(() => {
-    if (!listening && finalTranscript && !commandArray.find(command => command.command === finalTranscript)) {
+    if (
+      !listening &&
+      finalTranscript &&
+      !commandArray.find((command) => command.command === finalTranscript)
+    ) {
       void retryCommandNotFound();
-    }   
+    } else if (!listening && transcript && !finalTranscript) {
+      // find the right command and call it
+      const command = commandArray.find(
+        (command) => command.command === transcript,
+      );
+      if (command) {
+        command.callback();
+      } else {
+        void retryCommandNotFound();
+      }
+    }
   }, [finalTranscript, listening]);
   const [showIndonesian, setShowIndonesian] = React.useState(false);
   // Create persistent references to audio objects
@@ -84,7 +96,7 @@ function FlashCardContent() {
   const startCard = useCallback(async () => {
     abortController.current = new AbortController();
     const signal = abortController.current.signal;
-    
+
     const playWithDelay = async (audio: HTMLAudioElement | null, rate = 1) => {
       if (!audio) return;
       audio.playbackRate = rate;
@@ -100,24 +112,33 @@ function FlashCardContent() {
     };
 
     // Wait for Indonesian audio to load before getting duration
-    const getAudioDuration = async (audio: HTMLAudioElement | null): Promise<number> => {
+    const getAudioDuration = async (
+      audio: HTMLAudioElement | null,
+    ): Promise<number> => {
       if (!audio) throw new Error("Audio element not found");
       if (audio.duration && !isNaN(audio.duration)) return audio.duration;
-      
+
       return new Promise((resolve) => {
-        audio.addEventListener('loadedmetadata', () => {
-          resolve(audio.duration);
-        }, { once: true });
+        audio.addEventListener(
+          "loadedmetadata",
+          () => {
+            resolve(audio.duration);
+          },
+          { once: true },
+        );
       });
     };
 
-    const indonesianDuration = await getAudioDuration(indonesianAudioRef.current);
-    const pauseDuration = (indonesianDuration / slowdownFactor) * pauseMultiplier;
+    const indonesianDuration = await getAudioDuration(
+      indonesianAudioRef.current,
+    );
+    const pauseDuration =
+      (indonesianDuration / slowdownFactor) * pauseMultiplier;
 
     try {
       // Play English
       await playWithDelay(englishAudioRef.current);
-      await new Promise(resolve => setTimeout(resolve, pauseDuration * 1000));
+      await new Promise((resolve) => setTimeout(resolve, pauseDuration * 1000));
       // Play Indonesian
       if (signal.aborted) {
         console.log("aborted");
@@ -125,8 +146,10 @@ function FlashCardContent() {
       }
       await playWithDelay(indonesianAudioRef.current, slowdownFactor);
       if (signal.aborted) return;
-      await new Promise(resolve => setTimeout(resolve, pauseDuration * pauseMultiplier * 1000));
-      
+      await new Promise((resolve) =>
+        setTimeout(resolve, pauseDuration * pauseMultiplier * 1000),
+      );
+
       // Play Indonesian again
       if (signal.aborted) return;
       await playWithDelay(indonesianAudioRef.current, slowdownFactor);
@@ -140,13 +163,11 @@ function FlashCardContent() {
     }
   }, []);
 
-
-  
   // Initialize audio objects once
   useEffect(() => {
     popSoundRef.current = new Audio("/pop-on.mp3");
     popSoundRef.current.volume = 0.5;
-    
+
     // Cleanup function
     return () => {
       indonesianAudioRef.current?.pause();
@@ -169,13 +190,17 @@ function FlashCardContent() {
   const playIndonesian = () => {
     if (!indonesianAudioRef.current) return;
     indonesianAudioRef.current.playbackRate = 0.9;
-    indonesianAudioRef.current.play()
-      .catch((error) => console.error("Error playing Indonesian audio:", error));
+    indonesianAudioRef.current
+      .play()
+      .catch((error) =>
+        console.error("Error playing Indonesian audio:", error),
+      );
   };
 
   const playEnglish = () => {
     if (!englishAudioRef.current) return;
-    englishAudioRef.current.play()
+    englishAudioRef.current
+      .play()
       .catch((error) => console.error("Error playing English audio:", error));
   };
 
@@ -194,126 +219,93 @@ function FlashCardContent() {
     };
   }, []);
 
-  if (!currentCard)
-    return (
-      <div>no card</div>
-    );
+  if (!currentCard) return <div>no card</div>;
 
   return (
-    <div className="w-96 rounded-xl bg-white p-6 shadow-lg border border-gray-200">
+    <div className="w-96 rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
       <div
         className="mb-8 cursor-pointer text-center text-xl"
         onClick={playEnglish}
       >
         {currentCard.english}
       </div>
-      <div
-        className="mb-8 flex cursor-pointer items-center justify-center gap-2 text-center text-xl"
-      >
-          <>
-            <span 
-              onClick = {(e) => {
-                e.stopPropagation();
-                if (showIndonesian) {
-                  playIndonesian();
-                }
-                setShowIndonesian(true);
-              }}
-              className={`text-xl ${showIndonesian ? "hover:text-blue-600" : "blur"}`}
-            >
-              {currentCard.indonesian}
+      <div className="mb-8 flex cursor-pointer items-center justify-center gap-2 text-center text-xl">
+        <>
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              if (showIndonesian) {
+                playIndonesian();
+              }
+              setShowIndonesian(true);
+            }}
+            className={`text-xl ${showIndonesian ? "hover:text-blue-600" : "blur"}`}
+          >
+            {currentCard.indonesian}
           </span>
           <button
             onClick={(e) => {
               e.stopPropagation();
-                setShowIndonesian(false);
-              }}
-              className="rounded-full p-1 transition-colors hover:bg-gray-100"
-              aria-label="Hide Indonesian text"
-            >
+              setShowIndonesian(false);
+            }}
+            className="rounded-full p-1 transition-colors hover:bg-gray-100"
+            aria-label="Hide Indonesian text"
+          >
             {showIndonesian && <EyeSlashIcon size={20} />}
           </button>
         </>
       </div>
-      <div className="flex select-none items-center gap-2 justify-between">
-        <div className="flex gap-2 flex-wrap">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => startCard()}
-          >
-            Again
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => enqueueCard()}
-          >
-            Later
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={stopAllAudio}
-          >
-            Pause
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => finishCard(5)}
-          >
-            Easy
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => finishCard(3)}
-          >
-            Okay
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => finishCard(1)}
-          >
-            Hard
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => finishCard()}
-          >
-            Skip
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {listening ? (
-            <div
-              className="p-1"
-              onClick={() => SpeechRecognition.stopListening()}
-            >
-              <MicrophoneIcon size={24} />
-            </div>
-          ) : (
-            <div onClick={() => SpeechRecognition.startListening({ language: "en-US" })}>
-              <MicrophoneCrossIcon size={32} />
-            </div>
-          )}
-          {transcript && (
-            <div className="bg-gray-100 rounded-md p-2">transcript {transcript}</div>
-          )}
-          {currentCard.userCards.length > 0 && <div>
-            {currentCard.userCards[0]?.interval}
-          </div>}
+      <div className="flex justify-between items-center gap-2">
+        {listening ? (
           <div
-            onClick={() => finishCard()}
-            className="rounded-full p-1 transition-colors hover:bg-green-100"
+            className="p-1"
+            onClick={() => SpeechRecognition.stopListening()}
           >
-            <NextCardIcon size={24} />
+            <MicrophoneIcon size={24} />
           </div>
+        ) : (
+          <div
+            onClick={() =>
+              SpeechRecognition.startListening({ language: "en-US" })
+            }
+          >
+            <MicrophoneCrossIcon size={32} />
+          </div>
+        )}
+        {transcript && (
+          <div className="rounded-md bg-gray-100 p-2">
+            {transcript}
+          </div>
+        )}
+        <div
+          onClick={() => finishCard()}
+          className="rounded-full p-1 transition-colors hover:bg-green-100"
+        >
+          <NextCardIcon size={24} />
         </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" onClick={() => finishCard(5)}>
+          Easy
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => finishCard(3)}>
+          Okay
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => finishCard(1)}>
+          Hard
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => startCard()}>
+          Again
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => enqueueCard()}>
+          Later
+        </Button>
+        <Button variant="outline" size="sm" onClick={stopAllAudio}>
+          Pause
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => finishCard()}>
+          Skip
+        </Button>
       </div>
     </div>
   );

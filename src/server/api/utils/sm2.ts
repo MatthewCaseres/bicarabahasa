@@ -4,7 +4,7 @@ export function reviewCardCalculations(userCard: UserCard, quality: number) {
   const newEaseFactor = calculateEaseFactor(userCard, quality);
   const newInterval = calculateInterval(userCard, quality);
   const newRepetitions = calculateRepetitions(userCard, quality);
-  const newNextReview = new Date(Date.now() + newInterval * 24 * 60 * 60 * 1000);
+  const newNextReview = new Date(Date.now() + userCard.interval * 24 * 60 * 60 * 1000 - 1000 * 60 * 60 * 5);
   return { newEaseFactor, newInterval, newRepetitions, newNextReview };
 }
 
