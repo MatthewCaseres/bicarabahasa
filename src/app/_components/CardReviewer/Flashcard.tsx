@@ -13,10 +13,17 @@ import {
 import "regenerator-runtime/runtime";
 import React, { useRef, useEffect, useCallback } from "react";
 import { api } from "~/trpc/react";
+import type { CardsWithUserCards } from "~/server/api/routers/deck";
+import { Button } from "~/components/ui/button";
 
 
 function FlashCardContent() {
-  const updateUserCard = api.userCard.reviewCard.useMutation();
+  const utils = api.useUtils();
+  const updateUserCard = api.userCard.reviewCard.useMutation({
+    onSuccess: async () => {
+      await utils.card.getUserReviewCards.invalidate();
+    },
+  });
   const { state, dispatch } = useFlashcard();
   const maxQueueLength = 4;
   const isQueueCard =
@@ -51,6 +58,7 @@ function FlashCardContent() {
     {command: "easy", callback: () => finishCard(5)},
     {command: "okay", callback: () => finishCard(3)},
     {command: "hard", callback: () => finishCard(1)},
+    {command: "skip", callback: () => finishCard()},
   ]
   const { transcript, finalTranscript, resetTranscript, listening } = useSpeechRecognition(
     {commands: commandArray}
@@ -62,7 +70,7 @@ function FlashCardContent() {
   }
   // useffect to accomplish the same thing as the commands with a switch
   React.useEffect(() => {
-    if (!listening &&finalTranscript && !commandArray.find(command => command.command === finalTranscript)) {
+    if (!listening && finalTranscript && !commandArray.find(command => command.command === finalTranscript)) {
       void retryCommandNotFound();
     }   
   }, [finalTranscript, listening]);
@@ -228,37 +236,90 @@ function FlashCardContent() {
         </>
       </div>
       <div className="flex select-none items-center gap-2 justify-between">
-      <div
-            onClick={() => stopAllAudio()}
+        <div className="flex gap-2 flex-wrap">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => startCard()}
           >
-            stop</div>
-        {listening ? (
+            Again
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => enqueueCard()}
+          >
+            Later
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={stopAllAudio}
+          >
+            Pause
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => finishCard(5)}
+          >
+            Easy
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => finishCard(3)}
+          >
+            Okay
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => finishCard(1)}
+          >
+            Hard
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => finishCard()}
+          >
+            Skip
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {listening ? (
+            <div
+              className="p-1"
+              onClick={() => SpeechRecognition.stopListening()}
+            >
+              <MicrophoneIcon size={24} />
+            </div>
+          ) : (
+            <div onClick={() => SpeechRecognition.startListening({ language: "en-US" })}>
+              <MicrophoneCrossIcon size={32} />
+            </div>
+          )}
+          {transcript && (
+            <div className="bg-gray-100 rounded-md p-2">transcript {transcript}</div>
+          )}
+          {currentCard.userCards.length > 0 && <div>
+            {currentCard.userCards[0]?.interval}
+          </div>}
           <div
-            className="p-1"
-            onClick={() => SpeechRecognition.stopListening()}
+            onClick={() => finishCard()}
+            className="rounded-full p-1 transition-colors hover:bg-green-100"
           >
-            <MicrophoneIcon size={24} />
+            <NextCardIcon size={24} />
           </div>
-        ) : (
-          <div onClick={() => SpeechRecognition.startListening({ language: "en-US" })}>
-            <MicrophoneCrossIcon size={32} />
-          </div>
-        )}
-        {transcript && (
-          <div className="bg-gray-100 rounded-md p-2">transcript {transcript}</div>
-        )}
-        <div
-          onClick={() => finishCard()}
-          className="rounded-full p-1 transition-colors hover:bg-green-100"
-        >
-          <NextCardIcon size={24} />
         </div>
       </div>
     </div>
   );
 }
 
-export function FlashCard({ cards }: { cards: Card[] }) {
+export function FlashCard({ cards }: { cards: CardsWithUserCards }) {
   return (
     <FlashcardProvider initialCards={cards}>
       <FlashCardContent />

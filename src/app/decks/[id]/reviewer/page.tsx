@@ -1,4 +1,4 @@
-import {FlashCard} from './Flashcard';
+import {FlashCard} from '../../../_components/CardReviewer/Flashcard';
 import { api, HydrateClient } from "~/trpc/server";
 
 

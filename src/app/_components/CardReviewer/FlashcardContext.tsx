@@ -1,10 +1,13 @@
 'use client';
 import type { Card } from "@prisma/client";
 import { createContext, useContext, useReducer, type ReactNode } from "react";
+import type { CardsWithUserCards } from "~/server/api/routers/deck";
+
+
 
 interface FlashcardState {
-  cards: Card[];
-  cardQueue: Card[];
+  cards: CardsWithUserCards;
+  cardQueue: CardsWithUserCards;
 }
 
 type FlashcardAction = 
@@ -51,7 +54,7 @@ const FlashcardContext = createContext<{
   dispatch: React.Dispatch<FlashcardAction>;
 } | null>(null);
 
-export function FlashcardProvider({ children, initialCards }: { children: ReactNode, initialCards: Card[] }) {
+export function FlashcardProvider({ children, initialCards }: { children: ReactNode, initialCards: CardsWithUserCards }) {
   const [state, dispatch] = useReducer(flashcardReducer, {
     ...initialState,
     cards: initialCards,

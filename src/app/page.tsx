@@ -3,10 +3,15 @@ import { getServerAuthSession } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 import Link from "next/link";
 import { roles } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
 
 export default async function Home() {
   const session = await getServerAuthSession();
   const isAdmin = session?.user?.role === roles.ADMIN;
+  let reviewCardSize = 0;
+  if (session) {
+    reviewCardSize = (await api.card.getUserReviewCards()).length;
+  }
   
   if (session) {
     void api.collection.getAll.prefetch();
@@ -49,6 +54,13 @@ export default async function Home() {
               {session ? "Sign out" : "Sign in"}
             </Link>
           </div>
+        {session && reviewCardSize > 0 && (
+          <Link href="/review">
+            <Button className="mt-4" variant="default" size="lg">
+              Review {reviewCardSize} Cards
+            </Button>
+          </Link>
+        )}
         </div>
         {session && <CollectionCreator isAdmin={isAdmin}/>}
       </main>
