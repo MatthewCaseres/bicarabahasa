@@ -13,7 +13,7 @@ export type DeckWithCards = Prisma.DeckGetPayload<{
   }
 }>;
 
-export type DeckCards = DeckWithCards["cards"];
+export type CardsWithUserCards = DeckWithCards["cards"];
 
 async function rebalancePriorities(db: PrismaClient, collectionId: string) {
   const decks = await db.deck.findMany({
@@ -50,7 +50,11 @@ export const deckRouter = createTRPCRouter({
           cards: {
             orderBy: { createdAt: 'desc' },
             include: {
-              userCards: true
+              userCards: {
+                where: {
+                  userId: ctx.session?.user.id
+                }
+              }
             }
           }
         },

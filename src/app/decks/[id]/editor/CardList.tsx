@@ -10,12 +10,14 @@ import { FlashcardForm } from "~/app/_components/FlashcardForm";
 import type { Card } from "@prisma/client";
 import { Dialog } from "~/components/ui/dialog";
 import { NameDescriptionHeader } from "~/app/_components/NameDescriptionHeader";
+import type { UserCard } from "@prisma/client";
 
 type LanguageCardProps = Card & {
   setEditCardId: (id: string) => void;
   setEditOpen: (open: boolean) => void;
   onDelete: () => void;
   isAdmin: boolean;
+  userCard: UserCard | undefined;
 };
 
 function LanguageCard({
@@ -28,6 +30,7 @@ function LanguageCard({
   setEditOpen,
   onDelete,
   isAdmin,
+  userCard,
 }: LanguageCardProps) {
   const playIndonesian = () => {
     const audio = new Audio(indonesianAudioUrl);
@@ -62,6 +65,16 @@ function LanguageCard({
         >
           {english}
         </p>
+        {userCard && (
+          <>
+        <Separator className="my-2" />
+          
+          <div className="flex text-sm font-thin justify-between px-1">
+            <div>Interval: {userCard.interval}</div>
+            <div>Next review: {userCard.nextReview.toLocaleString()}</div>
+          </div>
+          </>
+        )}
       </div>
       {isAdmin && (
         <div className="flex flex-col items-center justify-center gap-2">
@@ -141,8 +154,11 @@ export function LanguageCardList({
               {...card}
               setEditCardId={setEditCardId}
               setEditOpen={setEditOpen}
-              onDelete={() => deleteCard.mutate({ id: card.id })}
-              isAdmin={isAdmin}
+                onDelete={() => deleteCard.mutate({ id: card.id })}
+                isAdmin={isAdmin}
+                userCard={
+                  card.userCards.length > 0 ? card.userCards[0] : undefined
+              }
             />
           ))}
         </div>
