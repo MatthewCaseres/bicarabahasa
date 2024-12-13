@@ -57,6 +57,10 @@ export const userCardRouter = createTRPCRouter({
             userId: ctx.session.user.id,
           },
         });
+      } else if (userCard.nextReview > new Date()) {
+        return {
+          message: "Card is not due for review",
+        }
       }
       const { newInterval, newRepetitions, newEaseFactor, newNextReview } = reviewCardCalculations(userCard, input.quality);
       return ctx.db.userCard.update({
